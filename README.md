@@ -23,8 +23,7 @@ pytest --cov=farmbot --cov-report html
 # Usage
 
 ```python
-from farmbot.farmbot import Farmbot
-from farmbot.farmbot_token import FarmbotToken
+from farmbot import Farmbot, FarmbotToken
 
 # Before we begin, we must download an access token from the
 # API. To avoid copy/pasting passwords, it is best to create
@@ -39,9 +38,9 @@ fb = Farmbot(raw_token)
 # If you are just doing testing, such as local development,
 # it is possible to skip token creation and login with email
 # and password. This is not recommended for production devices:
-fb = Farmbot.login(email="em@i.l",
-                   password="pass",
-                   server="https://my.farm.bot")
+# fb = Farmbot.login(email="em@i.l",
+#                    password="pass",
+#                    server="https://my.farm.bot")
 
 # The next step is to call fb.connect(), but we are not ready
 # to do that yet. Before we can call connect(), we must
@@ -108,7 +107,7 @@ class MyHandler:
         print("Same information as before: " + xyz)
 
     # The `on_log` event fires every time a new log is created.
-    # The callback recieves a FarmBot instance, plus a JSON
+    # The callback receives a FarmBot instance, plus a JSON
     # log object. The most useful piece of information is the
     # `message` attribute, though other attributes do exist.
     def on_log(self, bot, log):
