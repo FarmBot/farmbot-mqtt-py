@@ -168,24 +168,18 @@ More will be added later.
  - [X] emit on_connect
  - [X] emit on_error
  - [X] emit on_response
+ - [X] bot.location
+ - [X] bot.send_raw
+ - [X] bot.read_status
+ - [X] Perform `getStatus()` before firing `connect()` event.
 
-# Phase I TODOs
+# Easy TODOs
 
- - [ ] 100% test coverage (after API feedback)
- - [ ] Publish to PyPi
+ - [ ] 100% test coverage
  - [ ] bot.emergency_lock
  - [ ] bot.emergency_unlock
- - [ ] bot.location.x|y|z
- - [ ] bot.publish
- - [ ] bot.read_pin
- - [ ] bot.read_status
- - [ ] bot.send
  - [ ] bot.take_photo
  - [ ] bot.write_pin
- - [ ] Perform `getStatus()` before firing `connect()` event.
-
-# Phase II TODOs
-
  - [ ] bot.find_home
  - [ ] bot.find_length
  - [ ] bot.flash_farmduino
@@ -202,5 +196,10 @@ More will be added later.
  - [ ] bot.sync
  - [ ] bot.toggle_pin
  - [ ] bot.update_farmbot_os
+
+# Phase II TODOs
+
+ - [ ] bot.read_pin
+ - [ ] bot.run_sequence
+ - [ ] Publish to PyPi
  - [ ] Get a CI System
- - [ ] (do last) bot.run_sequence

@@ -76,6 +76,7 @@ class FarmbotConnection():
     def handle_connect(self, mqtt: mqtt.Client, userdata: None, flags: None, rc: None):
         for channel in self.channels:
             mqtt.subscribe(channel)
+        self.bot.read_status()
         self.bot.handler.on_connect(self.bot, mqtt)
 
     def handle_message(self, mqtt: mqtt.Client, userdata: None, msg: mqtt):
@@ -183,8 +184,11 @@ class Farmbot():
         z = position["z"] or -0.0
         return (x, y, z)
 
+    def send_raw(self, rpc):
+        return self.connection.send_rpc(rpc)
+
     def move_absolute(self, x: float, y: float, z: float, speed: float = 100.0) -> str:
-        return self.connection.send_rpc({
+        return self.send_raw({
             "kind": "move_absolute",
             "args": {
                 "location": {
@@ -205,7 +209,7 @@ class Farmbot():
 
     def send_message(self, msg: str) -> str:
         # assertion busy debug error fun info success warn
-        return self.connection.send_rpc({
+        return self.send_raw({
             "kind": "send_message",
             "args": {
                 "message": msg,
@@ -213,8 +217,8 @@ class Farmbot():
             }
         })
 
-    def noop(self, _other):
-        pass
+    def read_status(self):
+        return self.send_raw({"kind": "read_status", "args": {}})
 
 
 class StubHandler:
