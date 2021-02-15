@@ -176,6 +176,9 @@ More will be added later.
 # Easy TODOs
 
  - [ ] 100% test coverage
+ - [ ] 100% documentation
+ - [ ] Update MQTT client string
+ - [ ] bot.lua ???
  - [ ] bot.emergency_lock
  - [ ] bot.emergency_unlock
  - [ ] bot.take_photo

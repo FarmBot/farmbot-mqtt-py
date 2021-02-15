@@ -87,24 +87,24 @@ class FarmbotConnection():
             self.handle_log(msg)
 
         if msg.topic == self.incoming_chan:
-            resp = json.loads(msg.payload)
-            kind = resp["kind"]
-            label = (resp["args"] or {})["label"] or "unknown"
-            if kind == "rpc_ok":
-                self.handle_resp(label)
-            if kind == "rpc_error":
-                self.handle_error(label, resp["body"] or [])
+            self.unpack_response(msg.payload)
 
-    def send_rpc(self, rpc):
-        label = str(uuid.uuid1())
-        message = {"kind": "rpc_request", "args": {"label": label}}
-        if isinstance(rpc, list):
-            message["body"] = rpc
-        else:
-            message["body"] = [rpc]
-        payload = json.dumps(message)
-        self.mqtt.publish(self.outgoing_chan, payload)
-        return label
+    def unpack_response(self, payload: str):
+        resp = json.loads(payload)
+        kind = resp["kind"]
+        label = resp["args"]["label"]
+        if kind == "rpc_ok":
+            self.handle_resp(label)
+        if kind == "rpc_error":
+            self.handle_error(label, resp["body"] or [])
+
+    def handle_resp(self, label: str):
+        # {
+        #   'kind': 'rpc_ok',
+        #   'args': { 'label': 'fd0ee7c9-6ca8-11eb-9d9d-eba70539ce61' },
+        # }
+        self.bot.handler.on_response(self.bot, OkResponse(label))
+        return
 
     def handle_status(self, msg):
         self.bot.state = json.loads(msg.payload)
@@ -114,12 +114,6 @@ class FarmbotConnection():
     def handle_log(self, msg):
         log = json.loads(msg.payload)
         self.bot.handler.on_log(self.bot, log)
-        return
-
-    def handle_resp(self, label: str):
-        # { 'kind': 'rpc_ok', 'args': { 'label': 'fd0ee7c9-6ca8-11eb-9d9d-eba70539ce61' }, }
-        response = OkResponse(label)
-        self.bot.handler.on_response(self.bot, response)
         return
 
     def handle_error(self, label: str, errors: List[Explanation]):
@@ -137,9 +131,19 @@ class FarmbotConnection():
             args = error["args"] or {"message": "No message provided"}
             message = args["message"]
             tidy_errors.append(message)
-        resp = ErrorResponse(label, tidy_errors)
-        self.bot.handler.on_error(self.bot, resp)
+        self.bot.handler.on_error(self.bot, ErrorResponse(label, tidy_errors))
         return
+
+    def send_rpc(self, rpc):
+        label = str(uuid.uuid1())
+        message = {"kind": "rpc_request", "args": {"label": label}}
+        if isinstance(rpc, list):
+            message["body"] = rpc
+        else:
+            message["body"] = [rpc]
+        payload = json.dumps(message)
+        self.mqtt.publish(self.outgoing_chan, payload)
+        return label
 
 
 class Farmbot():
