@@ -9,6 +9,25 @@ class FakeReturn:
         return fake_bytes
 
 
+class FakeFarmbot():
+    def __init__(self) -> None:
+        self.password = "drowssap"
+        self.username = "emanresu"
+        self.hostname = "tob.mraf.ym"
+        self.handle_connect = mock.MagicMock()
+        self.handle_message = mock.MagicMock()
+        self.read_status = mock.MagicMock()
+        self.handler = fb.StubHandler()
+
+
+class FakeMQTT():
+    def __init__(self) -> None:
+        self.connect = mock.MagicMock()
+        self.loop_forever = mock.MagicMock()
+        self.username_pw_set = mock.MagicMock()
+        self.subscribe = mock.MagicMock()
+
+
 class TestFarmbotToken():
     @mock.patch("farmbot.urlopen", autospec=True, return_value=FakeReturn())
     def test_download_token(_, mock_download_token):
@@ -66,3 +85,45 @@ class TestOkResponse():
         id = "my_id"
         fake = fb.OkResponse(id)
         assert(fake.id == id)
+
+
+class TestFarmbotConnection():
+    def test_init(self):
+        my_farmbot = FakeFarmbot()
+        connection = fb.FarmbotConnection(my_farmbot)
+        assert(connection.bot == my_farmbot)
+        assert(connection.mqtt)
+        assert(connection.incoming_chan == "bot/emanresu/from_device")
+        assert(connection.logs_chan == "bot/emanresu/logs")
+        assert(connection.outgoing_chan == "bot/emanresu/from_clients")
+        assert(connection.status_chan == "bot/emanresu/status")
+        expected = ('bot/emanresu/status',
+                    'bot/emanresu/logs',
+                    'bot/emanresu/from_device')
+        assert(connection.channels == expected)
+
+    def test_start_connection(self):
+        my_farmbot = FakeFarmbot()
+        client = FakeMQTT()
+        connection = fb.FarmbotConnection(my_farmbot, client)
+        connection.start_connection()
+        client.connect.assert_called_with('tob.mraf.ym', 1883, 60)
+        client.loop_forever.assert_called()
+        client.username_pw_set.assert_called_with('emanresu', 'drowssap')
+        assert(client.on_connect)
+        assert(client.on_message)
+
+    def test_handle_connect(self):
+        # https://docs.python.org/3/library/unittest.mock.html
+        my_farmbot = FakeFarmbot()
+        my_farmbot.handler.on_connect = mock.MagicMock()
+        client = FakeMQTT()
+        connection = fb.FarmbotConnection(my_farmbot, client)
+        connection.handle_connect(mqtt=client,
+                                  userdata=None,
+                                  flags=None,
+                                  rc=None)
+        for channel in connection.channels:
+            client.subscribe.assert_has_calls([mock.call(channel)])
+        my_farmbot.handler.on_connect.assert_called_with(my_farmbot, client)
+        my_farmbot.read_status.assert_called()
