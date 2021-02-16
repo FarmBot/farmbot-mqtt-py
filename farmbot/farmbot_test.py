@@ -295,9 +295,17 @@ class TestFarmbotConnection():
         bot = fb.Farmbot(fake_token)
         assert bot.position() == (-0.0, -0.0, -0.0)
 
-    def test_send_raw(self):
-        fake_rpc = {"kind": "nothing", "args": {}}
+    def test__do_cs(self):
+        fake_rpc = {"kind": "nothing", "args": {}, "body": []}
         bot = fb.Farmbot(fake_token)
         bot.connection.send_rpc = mock.MagicMock()
-        bot.send_raw(fake_rpc)
+        bot._do_cs("nothing", {})
         bot.connection.send_rpc.assert_called_with(fake_rpc)
+
+    def test_connect(self):
+        bot = fb.Farmbot(fake_token)
+        fake_handler = 'In real life, this would be a class'
+        bot.connection.start_connection = mock.MagicMock()
+        bot.connect(fake_handler)
+        assert bot.handler == fake_handler
+        bot.connection.start_connection.assert_called()

@@ -188,41 +188,46 @@ class Farmbot():
         z = position["z"] or -0.0
         return (x, y, z)
 
-    def send_raw(self, rpc):
-        return self.connection.send_rpc(rpc)
+    def _do_cs(self, kind, args, body=[]):
+        return self.connection.send_rpc({
+            "kind": kind,
+            "args": args,
+            "body": body
+        })
 
     def move_absolute(self, x: float, y: float, z: float, speed: float = 100.0) -> str:
-        return self.send_raw({
-            "kind": "move_absolute",
-            "args": {
-                "location": {
-                    "kind": "coordinate",
-                    "args": {
-                        "x": x,
-                        "y": y,
-                        "z": z,
-                    }
-                },
-                "speed": speed,
-                "offset": {
-                    "kind": "coordinate",
-                    "args": zero_xyz
-                }
-            }
+        return self._do_cs("move_absolute", {
+            "location": {"kind": "coordinate", "args": {"x": x, "y": y, "z": z, }},
+            "speed": speed,
+            "offset": {"kind": "coordinate", "args": zero_xyz}
         })
 
     def send_message(self, msg: str) -> str:
-        # assertion busy debug error fun info success warn
-        return self.send_raw({
-            "kind": "send_message",
-            "args": {
-                "message": msg,
-                "message_type": "info",
-            }
-        })
+        return self._do_cs("send_message", {"message": msg, "message_type": "info", })
 
-    def read_status(self):
-        return self.send_raw({"kind": "read_status", "args": {}})
+    def emergency_lock(self): raise "NOT IMPLEMENTED"
+    def emergency_unlock(self): raise "NOT IMPLEMENTED"
+    def find_home(self): raise "NOT IMPLEMENTED"
+    def find_length(self): raise "NOT IMPLEMENTED"
+    def flash_farmduino(self): raise "NOT IMPLEMENTED"
+    def go_to_home(self): raise "NOT IMPLEMENTED"
+    def lua(self): raise "NOT IMPLEMENTED"
+    def move_relative(self): raise "NOT IMPLEMENTED"
+    def ping(self): raise "NOT IMPLEMENTED"
+    def power_off(self): raise "NOT IMPLEMENTED"
+    def read_pin(self): raise "NOT IMPLEMENTED"
+    def read_status(self): return self._do_cs("read_status", {})
+    def reboot_farmduino(self): raise "NOT IMPLEMENTED"
+    def reboot(self): raise "NOT IMPLEMENTED"
+    def reset_farmbot_os(self): raise "NOT IMPLEMENTED"
+    def reset_farmduino(self): raise "NOT IMPLEMENTED"
+    def set_servo_angle(self): raise "NOT IMPLEMENTED"
+    def set_zero(self): raise "NOT IMPLEMENTED"
+    def sync(self): raise "NOT IMPLEMENTED"
+    def take_photo(self): raise "NOT IMPLEMENTED"
+    def toggle_pin(self): raise "NOT IMPLEMENTED"
+    def update_farmbot_os(self): raise "NOT IMPLEMENTED"
+    def write_pin(self): raise "NOT IMPLEMENTED"
 
 
 class StubHandler:
@@ -247,7 +252,7 @@ class FarmbotToken():
     # "Issued at" UNIX Timestamp
     iat: int
 
-    @staticmethod
+    @ staticmethod
     def download_token(email: str,
                        password: str,
                        server: str = "https://my.farm.bot") -> bytes:
