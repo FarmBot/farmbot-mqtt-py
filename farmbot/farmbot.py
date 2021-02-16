@@ -1,5 +1,5 @@
 import paho.mqtt.client as mqtt
-from typing import Any, Dict, List, Tuple, Type, TypedDict
+from typing import Any, Dict, List, Tuple, TypedDict
 from urllib.request import urlopen, Request
 import json
 import uuid
@@ -77,7 +77,7 @@ class FarmbotConnection():
         for channel in self.channels:
             mqtt.subscribe(channel)
         self.bot.read_status()
-        self.bot.handler.on_connect(self.bot, mqtt)
+        self.bot._handler.on_connect(self.bot, mqtt)
 
     def handle_message(self, mqtt: mqtt.Client, userdata: None, msg: mqtt):
         if msg.topic == self.status_chan:
@@ -103,17 +103,17 @@ class FarmbotConnection():
         #   'kind': 'rpc_ok',
         #   'args': { 'label': 'fd0ee7c9-6ca8-11eb-9d9d-eba70539ce61' },
         # }
-        self.bot.handler.on_response(self.bot, OkResponse(label))
+        self.bot._handler.on_response(self.bot, OkResponse(label))
         return
 
     def handle_status(self, msg):
         self.bot.state = json.loads(msg.payload)
-        self.bot.handler.on_change(self.bot, self.bot.state)
+        self.bot._handler.on_change(self.bot, self.bot.state)
         return
 
     def handle_log(self, msg):
         log = json.loads(msg.payload)
-        self.bot.handler.on_log(self.bot, log)
+        self.bot._handler.on_log(self.bot, log)
         return
 
     def handle_error(self, label: str, errors: List[Explanation]):
@@ -131,7 +131,7 @@ class FarmbotConnection():
             args = error["args"] or {"message": "No message provided"}
             message = args["message"]
             tidy_errors.append(message)
-        self.bot.handler.on_error(self.bot, ErrorResponse(label, tidy_errors))
+        self.bot._handler.on_error(self.bot, ErrorResponse(label, tidy_errors))
         return
 
     def send_rpc(self, rpc):
@@ -146,96 +146,12 @@ class FarmbotConnection():
         return label
 
 
-class Farmbot():
-    username: str
-    password: str
-    hostname: str
-    device_id: int
-    connection: FarmbotConnection
-
-    @classmethod
-    def login(cls,
-              email: str,
-              password: str,
-              server: str = "https://my.farm.bot"):
-        """
-        We reccomend that users store tokens rather than passwords.
-        """
-        token = FarmbotToken.download_token(email=email,
-                                            password=password,
-                                            server=server)
-        return Farmbot(token)
-
-    def __init__(self, raw_token: bytes):
-        token = FarmbotToken(raw_token)
-        self.username = token.bot
-        self.password = token.jwt
-        self.hostname = token.mqtt
-        self.device_id = token.sub
-        self.handler = StubHandler()
-
-        self.connection = FarmbotConnection(self)
-        self.state = empty_state()
-
-    def connect(self, handler):
-        self.handler = handler
-        self.connection.start_connection()
-
-    def position(self):
-        position = self.state["location_data"]["position"]
-        x = position["x"] or -0.0
-        y = position["y"] or -0.0
-        z = position["z"] or -0.0
-        return (x, y, z)
-
-    def _do_cs(self, kind, args, body=[]):
-        return self.connection.send_rpc({
-            "kind": kind,
-            "args": args,
-            "body": body
-        })
-
-    def move_absolute(self, x: float, y: float, z: float, speed: float = 100.0) -> str:
-        return self._do_cs("move_absolute", {
-            "location": {"kind": "coordinate", "args": {"x": x, "y": y, "z": z, }},
-            "speed": speed,
-            "offset": {"kind": "coordinate", "args": zero_xyz}
-        })
-
-    def send_message(self, msg: str) -> str:
-        return self._do_cs("send_message", {"message": msg, "message_type": "info", })
-
-    def emergency_lock(self): raise "NOT IMPLEMENTED"
-    def emergency_unlock(self): raise "NOT IMPLEMENTED"
-    def find_home(self): raise "NOT IMPLEMENTED"
-    def find_length(self): raise "NOT IMPLEMENTED"
-    def flash_farmduino(self): raise "NOT IMPLEMENTED"
-    def go_to_home(self): raise "NOT IMPLEMENTED"
-    def lua(self): raise "NOT IMPLEMENTED"
-    def move_relative(self): raise "NOT IMPLEMENTED"
-    def ping(self): raise "NOT IMPLEMENTED"
-    def power_off(self): raise "NOT IMPLEMENTED"
-    def read_pin(self): raise "NOT IMPLEMENTED"
-    def read_status(self): return self._do_cs("read_status", {})
-    def reboot_farmduino(self): raise "NOT IMPLEMENTED"
-    def reboot(self): raise "NOT IMPLEMENTED"
-    def reset_farmbot_os(self): raise "NOT IMPLEMENTED"
-    def reset_farmduino(self): raise "NOT IMPLEMENTED"
-    def set_servo_angle(self): raise "NOT IMPLEMENTED"
-    def set_zero(self): raise "NOT IMPLEMENTED"
-    def sync(self): raise "NOT IMPLEMENTED"
-    def take_photo(self): raise "NOT IMPLEMENTED"
-    def toggle_pin(self): raise "NOT IMPLEMENTED"
-    def update_farmbot_os(self): raise "NOT IMPLEMENTED"
-    def write_pin(self): raise "NOT IMPLEMENTED"
-
-
 class StubHandler:
-    def on_connect(self, bot: Farmbot, client: mqtt.Client) -> None: pass
-    def on_change(self, bot: Farmbot, state: Dict[Any, Any]) -> None: pass
-    def on_log(self, _bot: Farmbot, log: Dict[Any, Any]) -> None: pass
-    def on_error(self, _bot: Farmbot, _response: ErrorResponse) -> None: pass
-    def on_response(self, _bot: Farmbot, _response: OkResponse) -> None: pass
+    def on_connect(self, bot, client: mqtt.Client) -> None: pass
+    def on_change(self, bot, state: Dict[Any, Any]) -> None: pass
+    def on_log(self, _bot, log: Dict[Any, Any]) -> None: pass
+    def on_error(self, _bot, _response: ErrorResponse) -> None: pass
+    def on_response(self, _bot, _response: OkResponse) -> None: pass
 
 
 class FarmbotToken():
@@ -252,7 +168,7 @@ class FarmbotToken():
     # "Issued at" UNIX Timestamp
     iat: int
 
-    @ staticmethod
+    @staticmethod
     def download_token(email: str,
                        password: str,
                        server: str = "https://my.farm.bot") -> bytes:
@@ -302,3 +218,207 @@ def empty_state():
         "pins": {},
         "user_env": {}
     }
+
+
+class Farmbot():
+    username: str
+    password: str
+    hostname: str
+    device_id: int
+    connection: FarmbotConnection
+
+    @classmethod
+    def login(cls,
+              email: str,
+              password: str,
+              server: str = "https://my.farm.bot"):
+        """
+        We reccomend that users store tokens rather than passwords.
+        """
+        token = FarmbotToken.download_token(email=email,
+                                            password=password,
+                                            server=server)
+        return Farmbot(token)
+
+    def __init__(self, raw_token: bytes):
+        token = FarmbotToken(raw_token)
+        self.username = token.bot
+        self.password = token.jwt
+        self.hostname = token.mqtt
+        self.device_id = token.sub
+        self._handler = StubHandler()
+
+        self._connection = FarmbotConnection(self)
+        self.state = empty_state()
+
+    def connect(self, handler):
+        self._handler = handler
+        self._connection.start_connection()
+
+    def position(self):
+        position = self.state["location_data"]["position"]
+        x = position["x"] or -0.0
+        y = position["y"] or -0.0
+        z = position["z"] or -0.0
+        return (x, y, z)
+
+    def _do_cs(self, kind, args, body=[]):
+        return self._connection.send_rpc({
+            "kind": kind,
+            "args": args,
+            "body": body
+        })
+
+    def move_absolute(self, x: float, y: float, z: float, speed: float = 100.0) -> str:
+        """
+        Move to an absolute XYZ coordinate at a speed percentage (default speed: 100%).
+        """
+        return self._do_cs("move_absolute", {
+            "location": {"kind": "coordinate", "args": {"x": x, "y": y, "z": z, }},
+            "speed": speed,
+            "offset": {"kind": "coordinate", "args": zero_xyz}
+        })
+
+    def send_message(self, msg: str, type="info") -> str:
+        """
+        Send a log message.
+        """
+        return self._do_cs("send_message",
+                           {"message": msg, "message_type": type, })
+
+    def emergency_lock(self):
+        """
+        Perform an emergency stop, thereby preventing any
+        motor movement until `emergency_unlock()` is called.
+        """
+        return self._do_cs("emergency_lock", {})
+
+    def emergency_unlock(self):
+        """
+        Unlock the Farmduino, allowing movement of previously
+        locked motors.
+        """
+        return self._do_cs("emergency_unlock", {})
+
+    def find_home(self):
+        """
+        Find the home (0) position for all axes.
+        """
+        return self._do_cs("find_home", {"speed": 100, "axis": "all"})
+
+    def find_length(self, axis="all"):
+        """
+        Move to the end of each axis until a stall is detected,
+        then set that distance as the maximum length.
+        """
+        return self._do_cs("calibrate", {"axis": axis})
+
+    def flash_farmduino(self, package="farmduino"):
+        """
+        Flash microcontroller firmware. `package` is one of
+        the following values: "arduino", "express_k10",
+        "farmduino_k14", "farmduino"
+        """
+        return self._do_cs("flash_firmware", {"package": package})
+
+    def go_to_home(self, axis="all", speed=100):
+        """
+        Move to the home position for a given axis at a
+        particular speed.
+        """
+        return self._do_cs("home", {"speed": speed, "axis": axis})
+
+    def move_relative(self, x, y, z, speed=100):
+        """
+        Move to a relative XYZ offset from the device's current
+        position at a speed percentage (default speed: 100%).
+        """
+        return self._do_cs("move_relative",
+                           {"x": x, "y": y, "z": z, "speed": speed})
+
+    def power_off(self):
+        """
+        Deactivate FarmBot OS completely (shutdown). Useful
+        before unplugging the power.
+        """
+        return self._do_cs("power_off", {})
+
+    def read_status(self):
+        """
+        Read the status of the bot. Should not be needed unless you are first
+        logging in to the device, since the device pushes new states out on
+        every update.
+        """
+        self._do_cs("read_status", {})
+
+    def reboot(self):
+        """
+        Restart FarmBot OS.
+        """
+        return self._do_cs("reboot", {"package": "farmbot_os"})
+
+    def reboot_farmduino(self):
+        """
+        Reinitialize the FarmBot microcontroller firmware.
+        """
+        return self._do_cs("reboot", {"package": "arduino_firmware"})
+
+    def factory_reset(self):
+        """
+        THIS WILL RESET THE SD CARD, deleting all non-factory data!
+        * Be careful!! *
+        """
+        return self._do_cs("factory_reset", {"package": "farmbot_os"})
+
+    def sync(self):
+        """
+        Download/apply all of the latest FarmBot API JSON resources (plants,
+        account info, etc.) to the device.
+        """
+        return self._do_cs("sync", {})
+
+    def take_photo(self):
+        """
+        Snap a photo and send to the API for post processing.
+        """
+        return self._do_cs("take_photo", {})
+
+    def toggle_pin(self, pin_number):
+        """
+        Reverse the value of a digital pin.
+        """
+        return self._do_cs("toggle_pin", {"pin_number": pin_number})
+
+    def update_farmbot_os(self):
+        return self._do_cs("check_updates", {"package": "farmbot_os"})
+
+    def read_pin(self, pin_number, pin_mode="digital"):
+        """
+        Read a pin
+        """
+        modes = {"digital": 0, "analog": 1}
+        args = {
+            "label": "pin" + str(pin_number),
+            "pin_mode": modes[pin_mode] or (modes["digital"]),
+            "pin_number": pin_number
+        }
+        return self._do_cs("read_pin", args)
+
+    def write_pin(self, pin_number, pin_value, pin_mode="digital"):
+        """
+        Write to a pin
+        """
+        modes = {"digital": 0, "analog": 1}
+        args = {
+            "pin_mode": modes[pin_mode] or (modes["digital"]),
+            "pin_number": pin_number,
+            "pin_value": pin_value
+        }
+        return self._do_cs("write_pin", args)
+
+    def set_servo_angle(self, pin_number, angle):
+        """
+        Set pins 4 or 5 to a value between 0 and 180.
+        """
+        return self._do_cs("set_servo_angle",
+                           {"pin_number": pin_number, "pin_value": angle})

@@ -34,7 +34,7 @@ class FakeFarmbot(fb.Farmbot):
         self.state = None
         self.handle_connect = mock.MagicMock()
         self.handle_message = mock.MagicMock()
-        self.handler = fb.StubHandler()
+        self._handler = fb.StubHandler()
         self.read_status = mock.MagicMock()
 
 
@@ -140,7 +140,7 @@ class TestFarmbotConnection():
     def test_handle_connect(self):
         # https://docs.python.org/3/library/unittest.mock.html
         my_farmbot = FakeFarmbot()
-        my_farmbot.handler.on_connect = mock.MagicMock()
+        my_farmbot._handler.on_connect = mock.MagicMock()
         client = FakeMQTT()
         connection = fb.FarmbotConnection(my_farmbot, client)
         connection.handle_connect(mqtt=client,
@@ -149,7 +149,7 @@ class TestFarmbotConnection():
                                   rc=None)
         for channel in connection.channels:
             client.subscribe.assert_has_calls([mock.call(channel)])
-        my_farmbot.handler.on_connect.assert_called_with(my_farmbot, client)
+        my_farmbot._handler.on_connect.assert_called_with(my_farmbot, client)
         my_farmbot.read_status.assert_called()
 
     def test_handle_message(self):
@@ -201,7 +201,7 @@ class TestFarmbotConnection():
     def test_handle_resp(self):
         conn = fb.FarmbotConnection(FakeFarmbot(), FakeMQTT())
         my_mock = mock.MagicMock()
-        conn.bot.handler.on_response = my_mock
+        conn.bot._handler.on_response = my_mock
         conn.handle_resp("any_label")
         args = my_mock.call_args[0]
         bot = args[0]
@@ -212,16 +212,16 @@ class TestFarmbotConnection():
     def test_handle_status(self):
         conn = fb.FarmbotConnection(FakeFarmbot(), FakeMQTT())
         status_msg = FakeMqttMessage(conn.status_chan, '{}')
-        conn.bot.handler.on_change = mock.MagicMock()
+        conn.bot._handler.on_change = mock.MagicMock()
         conn.handle_status(status_msg)
-        conn.bot.handler.on_change.assert_called_with(conn.bot, {})
+        conn.bot._handler.on_change.assert_called_with(conn.bot, {})
 
     def test_handle_log(self):
         conn = fb.FarmbotConnection(FakeFarmbot(), FakeMQTT())
         status_msg = FakeMqttMessage(conn.logs_chan, '{}')
-        conn.bot.handler.on_log = mock.MagicMock()
+        conn.bot._handler.on_log = mock.MagicMock()
         conn.handle_log(status_msg)
-        conn.bot.handler.on_log.assert_called_with(conn.bot, {})
+        conn.bot._handler.on_log.assert_called_with(conn.bot, {})
 
     def test_handle_error(self):
         errors = [
@@ -232,7 +232,7 @@ class TestFarmbotConnection():
 
         conn = fb.FarmbotConnection(FakeFarmbot(), FakeMQTT())
         status_msg = FakeMqttMessage(conn.incoming_chan, '{}')
-        conn.bot.handler.on_error = mm = mock.MagicMock()
+        conn.bot._handler.on_error = mm = mock.MagicMock()
         conn.handle_error(label, errors)
         args = mm.call_args[0]
         actual_bot = args[0]
@@ -286,9 +286,9 @@ class TestFarmbotConnection():
         assert bot.password == "TOPSECRETTOKEN"
         assert bot.hostname == "mqtt://my.farm.bot:1883"
         assert bot.device_id == "device_456"
-        assert isinstance(bot.handler, fb.StubHandler)
+        assert isinstance(bot._handler, fb.StubHandler)
 
-        assert isinstance(bot.connection, fb.FarmbotConnection)
+        assert isinstance(bot._connection, fb.FarmbotConnection)
         assert bot.state == fb.empty_state()
 
     def test_position(self):
@@ -298,14 +298,111 @@ class TestFarmbotConnection():
     def test__do_cs(self):
         fake_rpc = {"kind": "nothing", "args": {}, "body": []}
         bot = fb.Farmbot(fake_token)
-        bot.connection.send_rpc = mock.MagicMock()
+        bot._connection.send_rpc = mock.MagicMock()
         bot._do_cs("nothing", {})
-        bot.connection.send_rpc.assert_called_with(fake_rpc)
+        bot._connection.send_rpc.assert_called_with(fake_rpc)
 
     def test_connect(self):
         bot = fb.Farmbot(fake_token)
         fake_handler = 'In real life, this would be a class'
-        bot.connection.start_connection = mock.MagicMock()
+        bot._connection.start_connection = mock.MagicMock()
         bot.connect(fake_handler)
-        assert bot.handler == fake_handler
-        bot.connection.start_connection.assert_called()
+        assert bot._handler == fake_handler
+        bot._connection.start_connection.assert_called()
+
+    def expected_rpc(self, bot, kind, args, body=None):
+        if not body:
+            bot._do_cs.assert_called_with(kind, args)
+        else:
+            bot._do_cs.assert_called_with(kind, args, body)
+
+    def test_various_rpcs(self):
+        bot = fb.Farmbot(fake_token)
+        bot._do_cs = mock.MagicMock()
+
+        bot.send_message("Hello, world!")
+        self.expected_rpc(bot,
+                          'send_message',
+                          {'message': 'Hello, world!', 'message_type': 'info'})
+
+        bot.emergency_lock()
+        self.expected_rpc(bot, "emergency_lock", {})
+
+        bot.emergency_unlock()
+        self.expected_rpc(bot, "emergency_unlock", {})
+
+        bot.find_home()
+        self.expected_rpc(bot, "find_home", {"speed": 100, "axis": "all"})
+
+        bot.find_length()
+        self.expected_rpc(bot, "calibrate", {"axis": "all"})
+
+        bot.flash_farmduino("express_k10")
+        self.expected_rpc(bot, "flash_firmware", {"package": "express_k10"})
+
+        bot.go_to_home()
+        self.expected_rpc(bot, "home", {"speed": 100, "axis": "all"})
+
+        bot.move_absolute(x=1.2, y=3.4, z=5.6)
+        self.expected_rpc(bot,
+                          'move_absolute',
+                          {
+                              'location': {
+                                  'kind': 'coordinate',
+                                  'args': {'x': 1.2, 'y': 3.4, 'z': 5.6}
+                              },
+                              'speed': 100.0,
+                              'offset': {
+                                  'kind': 'coordinate',
+                                  'args': {'x': 0, 'y': 0, 'z': 0}
+                              }
+                          })
+
+        bot.move_relative(x=1.2, y=3.4, z=5.6)
+        self.expected_rpc(bot,
+                          "move_relative",
+                          {"x": 1.2, "y": 3.4, "z": 5.6, "speed": 100})
+
+        bot.power_off()
+        self.expected_rpc(bot, "power_off", {})
+
+        bot.read_status()
+        self.expected_rpc(bot, "read_status", {})
+
+        bot.reboot()
+        self.expected_rpc(bot, "reboot", {"package": "farmbot_os"})
+
+        bot.reboot_farmduino()
+        self.expected_rpc(bot,
+                          "reboot",
+                          {"package": "arduino_firmware"})
+
+        bot.factory_reset()
+        self.expected_rpc(bot, "factory_reset", {"package": "farmbot_os"})
+
+        bot.sync()
+        self.expected_rpc(bot, "sync", {})
+
+        bot.take_photo()
+        self.expected_rpc(bot, "take_photo", {})
+
+        bot.toggle_pin(12)
+        self.expected_rpc(bot, "toggle_pin", {"pin_number": 12})
+
+        bot.update_farmbot_os()
+        self.expected_rpc(bot, "check_updates", {"package": "farmbot_os"})
+
+        bot.read_pin(21)
+        self.expected_rpc(bot,
+                          "read_pin",
+                          {'label': 'pin21', 'pin_mode': 0, 'pin_number': 21})
+
+        bot.write_pin(45, 67)
+        self.expected_rpc(bot,
+                          "write_pin",
+                          {'pin_mode': 0, 'pin_number': 45, 'pin_value': 67})
+
+        bot.set_servo_angle(5, 90)
+        self.expected_rpc(bot,
+                          "set_servo_angle",
+                          {'pin_number': 5, 'pin_value': 90})

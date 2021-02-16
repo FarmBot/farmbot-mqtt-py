@@ -147,20 +147,40 @@ fb.connect(handler)
 print("This line will not execute. `connect()` is a blocking call.")
 ```
 
-# Controlling the Device
+# Supported Remote Procedure Calls
 
-Currently, only two RPCs exist during this limited `alpha` phase:
+The currently supported list of commands is below.
 
- * `bot.move_abs()`
- * `bot.send_message()`
+Please create an issue if you would to request a new command.
 
-More will be added later.
+ * bot.position() -> (x, y, z)
+ * bot.emergency_lock()
+ * bot.emergency_unlock()
+ * bot.factory_reset()
+ * bot.find_home()
+ * bot.find_length(axis="all")
+ * bot.flash_farmduino(package="farmduino") (or "arduino", "express_k10", "farmduino_k14")
+ * bot.go_to_home(axis="all", speed=100)
+ * bot.move_absolute(x, y, z, speed=100.0)
+ * bot.move_relative(x, y, z, speed=100)
+ * bot.power_off()
+ * bot.read_pin(pin_number, pin_mode="digital") (NOTE: Results appear in state tree)
+ * bot.read_status()
+ * bot.reboot()
+ * bot.reboot_farmduino()
+ * bot.send_message(msg, type="info")
+ * bot.set_servo_angle(pin_number, angle)
+ * bot.sync()
+ * bot.take_photo()
+ * bot.toggle_pin(pin_number)
+ * bot.update_farmbot_os()
+ * bot.write_pin(pin_number, pin_value, pin_mode="digital" )
 
 # Done
 
  - [X] Initialize via API token
  - [X] bot.connect
- - [X] bot.connection
+ - [X] bot._connection
  - [X] bot.move_absolute
  - [X] bot.send_message
  - [X] emit on_change
@@ -172,37 +192,30 @@ More will be added later.
  - [X] bot.send_raw
  - [X] bot.read_status
  - [X] Perform `getStatus()` before firing `connect()` event.
+ - [X] bot.emergency_lock
+ - [X] bot.emergency_unlock
+ - [X] bot.take_photo
+ - [X] bot.find_home
+ - [X] bot.find_length
+ - [X] bot.flash_farmduino
+ - [X] bot.power_off
+ - [X] bot.sync
+ - [X] bot.toggle_pin
+ - [X] bot.update_farmbot_os
+ - [X] bot.reboot_farmduino
+ - [X] bot.move_relative
+ - [X] bot.go_to_home
 
-# Easy TODOs
+# TODO
 
  - [ ] 100% test coverage
  - [ ] 100% documentation
+ - [ ] Publish to PyPi
+ - [ ] Get a CI System
  - [ ] Update MQTT client string
- - [ ] bot.lua ???
- - [ ] bot.emergency_lock
- - [ ] bot.emergency_unlock
- - [ ] bot.take_photo
  - [ ] bot.write_pin
- - [ ] bot.find_home
- - [ ] bot.find_length
- - [ ] bot.flash_farmduino
- - [ ] bot.go_to_home
- - [ ] bot.move_relative
- - [ ] bot.ping
- - [ ] bot.power_off
  - [ ] bot.reboot
- - [ ] bot.reboot_farmduino
  - [ ] bot.reset_farmbot_os
  - [ ] bot.reset_farmduino
  - [ ] bot.set_servo_angle
- - [ ] bot.set_zero
- - [ ] bot.sync
- - [ ] bot.toggle_pin
- - [ ] bot.update_farmbot_os
-
-# Phase II TODOs
-
- - [ ] bot.read_pin
- - [ ] bot.run_sequence
- - [ ] Publish to PyPi
- - [ ] Get a CI System
+ - [ ] bot.run_sequence (References sequences)
