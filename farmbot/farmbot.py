@@ -1,46 +1,21 @@
 import paho.mqtt.client as mqtt
-from typing import Any, Dict, List, Tuple, TypedDict
 from urllib.request import urlopen, Request
 import json
 import uuid
 
 
-class Message(TypedDict):
-    message: str
-
-
-class Label(TypedDict):
-    label: str
-
-
-class RpcOK(TypedDict):
-    kind: str
-    args: Label
-
-
-class Explanation(TypedDict):
-    kind: str
-    args: Message
-
-
 class OkResponse():
-    def __init__(self, id: str):
+    def __init__(self, id):
         self.id = id
 
 
 class ErrorResponse():
-    def __init__(self, id: str, errors: List[str]):
+    def __init__(self, id, errors):
         self.errors = errors
         self.id = id
 
 
 class FarmbotConnection():
-    mqtt: mqtt.Client
-    channels: Tuple[str, str, str]
-    incoming_chan: str
-    logs_chan: str
-    status_chan: str
-
     def __init__(self, bot, mqtt=mqtt.Client()):
         self.bot = bot
         self.mqtt = mqtt
@@ -73,13 +48,13 @@ class FarmbotConnection():
 
         self.mqtt.loop_forever()
 
-    def handle_connect(self, mqtt: mqtt.Client, userdata: None, flags: None, rc: None):
+    def handle_connect(self, mqtt, userdata, flags, rc):
         for channel in self.channels:
             mqtt.subscribe(channel)
         self.bot.read_status()
         self.bot._handler.on_connect(self.bot, mqtt)
 
-    def handle_message(self, mqtt: mqtt.Client, userdata: None, msg: mqtt):
+    def handle_message(self, mqtt, userdata, msg):
         if msg.topic == self.status_chan:
             self.handle_status(msg)
 
@@ -89,7 +64,7 @@ class FarmbotConnection():
         if msg.topic == self.incoming_chan:
             self.unpack_response(msg.payload)
 
-    def unpack_response(self, payload: str):
+    def unpack_response(self, payload):
         resp = json.loads(payload)
         kind = resp["kind"]
         label = resp["args"]["label"]
@@ -98,7 +73,7 @@ class FarmbotConnection():
         if kind == "rpc_error":
             self.handle_error(label, resp["body"] or [])
 
-    def handle_resp(self, label: str):
+    def handle_resp(self, label):
         # {
         #   'kind': 'rpc_ok',
         #   'args': { 'label': 'fd0ee7c9-6ca8-11eb-9d9d-eba70539ce61' },
@@ -116,7 +91,7 @@ class FarmbotConnection():
         self.bot._handler.on_log(self.bot, log)
         return
 
-    def handle_error(self, label: str, errors: List[Explanation]):
+    def handle_error(self, label, errors):
         # {
         #   'kind': 'rpc_error',
         #   'args': { 'label': 'fd0ee7c8-6ca8-11eb-9d9d-eba70539ce61' },
@@ -147,31 +122,21 @@ class FarmbotConnection():
 
 
 class StubHandler:
-    def on_connect(self, bot, client: mqtt.Client) -> None: pass
-    def on_change(self, bot, state: Dict[Any, Any]) -> None: pass
-    def on_log(self, _bot, log: Dict[Any, Any]) -> None: pass
-    def on_error(self, _bot, _response: ErrorResponse) -> None: pass
-    def on_response(self, _bot, _response: OkResponse) -> None: pass
+    def on_connect(self, bot, client): pass
+    def on_change(self, bot, state): pass
+    def on_log(self, _bot, log): pass
+    def on_error(self, _bot, _response): pass
+    def on_response(self, _bot, _response): pass
 
 
 class FarmbotToken():
-    bot: str
-    iss: str
-    jti: str
-    mqtt_ws: str
-    mqtt: str
-    vhost: str
-    # "subject". This is your bot"s device ID as an integer
-    sub: int
-    # "expiration" UNIX timestamp
-    exp: int
-    # "Issued at" UNIX Timestamp
-    iat: int
-
     @staticmethod
-    def download_token(email: str,
-                       password: str,
-                       server: str = "https://my.farm.bot") -> bytes:
+    def download_token(email,
+                       password,
+                       server="https://my.farm.bot"):
+        """
+        Returns a byte stream representation of the
+        """
         req = Request(server + "/api/tokens")
         req.add_header("Content-Type", "application/json")
         data = {"user": {"email": email, "password": password}}
@@ -181,7 +146,7 @@ class FarmbotToken():
 
         return response.read()
 
-    def __init__(self, raw_token: bytes):
+    def __init__(self, raw_token):
         token_data = json.loads(raw_token)
         self.raw_token = raw_token
         token = token_data["token"]["unencoded"]
@@ -203,6 +168,11 @@ zero_xyz = {"x": 0, "y": 0, "z": 0}
 
 
 def empty_state():
+    """
+    This is what the bot's state tree looks like.
+    This helper method creates an empty object that is mostly
+    unpopulated.
+    """
     return {
         "configuration": {},
         "informational_settings": {},
@@ -221,17 +191,11 @@ def empty_state():
 
 
 class Farmbot():
-    username: str
-    password: str
-    hostname: str
-    device_id: int
-    connection: FarmbotConnection
-
     @classmethod
     def login(cls,
-              email: str,
-              password: str,
-              server: str = "https://my.farm.bot"):
+              email,
+              password,
+              server="https://my.farm.bot"):
         """
         We reccomend that users store tokens rather than passwords.
         """
@@ -240,7 +204,7 @@ class Farmbot():
                                             server=server)
         return Farmbot(token)
 
-    def __init__(self, raw_token: bytes):
+    def __init__(self, raw_token):
         token = FarmbotToken(raw_token)
         self.username = token.bot
         self.password = token.jwt
@@ -252,10 +216,17 @@ class Farmbot():
         self.state = empty_state()
 
     def connect(self, handler):
+        """
+        Attempt to connect to the MQTT broker.
+        """
         self._handler = handler
         self._connection.start_connection()
 
     def position(self):
+        """
+        Convinence method to return the bot's current location
+        as an (x, y, z) tuple.
+        """
         position = self.state["location_data"]["position"]
         x = position["x"] or -0.0
         y = position["y"] or -0.0
@@ -263,13 +234,17 @@ class Farmbot():
         return (x, y, z)
 
     def _do_cs(self, kind, args, body=[]):
+        """
+        This is a private helper that wraps CeleryScript in
+        an `rpc` node and sends it to the device over MQTT.
+        """
         return self._connection.send_rpc({
             "kind": kind,
             "args": args,
             "body": body
         })
 
-    def move_absolute(self, x: float, y: float, z: float, speed: float = 100.0) -> str:
+    def move_absolute(self, x, y, z, speed=100.0):
         """
         Move to an absolute XYZ coordinate at a speed percentage (default speed: 100%).
         """
@@ -279,7 +254,7 @@ class Farmbot():
             "offset": {"kind": "coordinate", "args": zero_xyz}
         })
 
-    def send_message(self, msg: str, type="info") -> str:
+    def send_message(self, msg, type="info"):
         """
         Send a log message.
         """

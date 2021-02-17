@@ -176,46 +176,9 @@ Please create an issue if you would to request a new command.
  * bot.update_farmbot_os()
  * bot.write_pin(pin_number, pin_value, pin_mode="digital" )
 
-# Done
-
- - [X] Initialize via API token
- - [X] bot.connect
- - [X] bot._connection
- - [X] bot.move_absolute
- - [X] bot.send_message
- - [X] emit on_change
- - [X] emit on_log
- - [X] emit on_connect
- - [X] emit on_error
- - [X] emit on_response
- - [X] bot.location
- - [X] bot.send_raw
- - [X] bot.read_status
- - [X] Perform `getStatus()` before firing `connect()` event.
- - [X] bot.emergency_lock
- - [X] bot.emergency_unlock
- - [X] bot.take_photo
- - [X] bot.find_home
- - [X] bot.find_length
- - [X] bot.flash_farmduino
- - [X] bot.power_off
- - [X] bot.sync
- - [X] bot.toggle_pin
- - [X] bot.update_farmbot_os
- - [X] bot.reboot_farmduino
- - [X] bot.move_relative
- - [X] bot.go_to_home
-
 # TODO
 
- - [ ] 100% test coverage
- - [ ] 100% documentation
  - [ ] Publish to PyPi
  - [ ] Get a CI System
  - [ ] Update MQTT client string
- - [ ] bot.write_pin
- - [ ] bot.reboot
- - [ ] bot.reset_farmbot_os
- - [ ] bot.reset_farmduino
- - [ ] bot.set_servo_angle
  - [ ] bot.run_sequence (References sequences)
