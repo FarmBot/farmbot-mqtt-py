@@ -79,7 +79,7 @@ class MyHandler:
         # tree directly:
         pos = state["location_data"]["position"]
         xyz = (pos["x"], pos["y"], pos["z"])
-        print("Same information as before: " + xyz)
+        print("Same information as before: " + str(xyz))
 
     # The `on_log` event fires every time a new log is created.
     # The callback receives a FarmBot instance, plus a JSON

@@ -1,0 +1,4 @@
+include *.py
+include LICENSE
+include VERSION
+recursive-include farmbot *.py

@@ -1,15 +1,21 @@
-# !NOT READY FOR GENERAL USE!
+# !PUBLIC BETA!
 
-Eventually, this will become the official RPC wrapper for Farmbot. It is still under active development.
-Many things mentioned below have not yet been implemented. Many will change without notice. Real-world testing is minimal.
+This package is ready for use, but has not undergone extensive real world testing.
+
+We appreciate bug reports.
+
+# Requirements
+
+This package has been tested with Python 3.8 and `paho-mqtt` 1.5.
+
+It may work with earlier versions of Python, but Python 3.8 is the supported versions. Please do not report bugs with earlier python versions.
 
 # Installation
 
 This module has not yet been published. In order to test the code, you must clone the repository and use the code directly:
 
 ```
-git clone git@github.com:FarmBot-Labs/farmbot-py.git
-cd farmbot-py
+pip install farmbot
 ```
 
 After cloning the repo, you must [manually install Paho MQTT](https://pypi.org/project/paho-mqtt/).
@@ -17,6 +23,7 @@ After cloning the repo, you must [manually install Paho MQTT](https://pypi.org/p
 # Unit Testing
 
 ```
+pip install -e .[dev]
 pytest --cov=farmbot --cov-report html
 ```
 
@@ -104,7 +111,7 @@ class MyHandler:
         # tree directly:
         pos = state["location_data"]["position"]
         xyz = (pos["x"], pos["y"], pos["z"])
-        print("Same information as before: " + xyz)
+        print("Same information as before: " + str(xyz))
 
     # The `on_log` event fires every time a new log is created.
     # The callback receives a FarmBot instance, plus a JSON
