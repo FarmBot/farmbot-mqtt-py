@@ -6,13 +6,13 @@ We appreciate bug reports.
 
 # Requirements
 
-This package has been tested with Python 3.8 and `paho-mqtt` 1.5.
+We tested this package with Python 3.8 and `paho-mqtt` 1.5.
 
-It may work with earlier versions of Python, but Python 3.8 is the supported versions. Please do not report bugs with earlier python versions.
+It may work with earlier versions of Python, but Python 3.8 is the supported version. Please do not report bugs with earlier python versions.
 
 # Installation
 
-This module has not yet been published. In order to test the code, you must clone the repository and use the code directly:
+FarmBot publishes the latest version of this package to [PyPi](https://pypi.org/project/farmbot/). You can install the latest version with the following command:
 
 ```
 pip install farmbot
@@ -185,7 +185,6 @@ Please create an issue if you would to request a new command.
 
 # TODO
 
- - [ ] Publish to PyPi
  - [ ] Get a CI System
  - [ ] Update MQTT client string
  - [ ] bot.run_sequence (References sequences)
