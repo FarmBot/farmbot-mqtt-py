@@ -1,4 +1,4 @@
-from farmbot.farmbot import Farmbot, FarmbotToken
+from farmbot import Farmbot, FarmbotToken
 
 # Before we begin, we must download an access token from the
 # API. To avoid copy/pasting passwords, it is best to create
