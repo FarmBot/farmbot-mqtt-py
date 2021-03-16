@@ -1,6 +1,4 @@
-# !PUBLIC BETA!
-
-This package is ready for use, but has not undergone extensive real world testing.
+This package is ready for use but has not undergone extensive real-world testing.
 
 We appreciate bug reports.
 
@@ -12,7 +10,7 @@ It may work with earlier versions of Python, but Python 3.8 is the supported ver
 
 # Installation
 
-FarmBot publishes the latest version of this package to [PyPi](https://pypi.org/project/farmbot/). You can install the latest version with the following command:
+FarmBot publishes the latest version of this package to [PyPi](https://pypi.org/project/farmbot/). You can install the newest version with the following command:
 
 ```
 pip install farmbot
@@ -183,8 +181,11 @@ Please create an issue if you would to request a new command.
  * bot.update_farmbot_os()
  * bot.write_pin(pin_number, pin_value, pin_mode="digital" )
 
-# TODO
+# Not Yet Supported
 
- - [ ] Get a CI System
- - [ ] Update MQTT client string
- - [ ] bot.run_sequence (References sequences)
+ * Ability to execute an existing sequence.
+ * REST resource management.
+
+# Building and Publishing the Package
+
+We follow a standard Pip / PyPI workflow. See [this excelent tutorial](https://www.youtube.com/watch?v=GIF3LaRqgXo&t=1527s) for details.
