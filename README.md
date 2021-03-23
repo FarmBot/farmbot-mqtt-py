@@ -145,9 +145,11 @@ class MyHandler:
 # instance of that handler and `connect()` it to the FarmBot:
 handler = MyHandler()
 
-# Keep in mind that `connect()` will block the current thread.
-# If you require parallel operations, consider using a background
-# thread or a worker process.
+# Once `connect` is called, execution of all other code will
+# be pause until an event occurs, such as logs, errors,
+# status updates, etc..
+# If you need to run other code while `connect()` is running,
+# consider using tools like system threads or processes.
 fb.connect(handler)
 print("This line will not execute. `connect()` is a blocking call.")
 ```
