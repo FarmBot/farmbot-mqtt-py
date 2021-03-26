@@ -16,8 +16,6 @@ FarmBot publishes the latest version of this package to [PyPi](https://pypi.org/
 pip install farmbot
 ```
 
-After cloning the repo, you must [manually install Paho MQTT](https://pypi.org/project/paho-mqtt/).
-
 # Unit Testing
 
 ```
