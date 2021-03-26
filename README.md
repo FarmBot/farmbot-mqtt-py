@@ -1,3 +1,5 @@
+[:fr: French Documentation](README-fr.md)
+
 This package is ready for use but has not undergone extensive real-world testing.
 
 We appreciate bug reports.
