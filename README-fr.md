@@ -129,7 +129,7 @@ class MyHandler:
         print("Identifiant de la requête en échec :" + response.id)
         # Nous pouvons également récupérer une liste de messages d'erreur
         # en affichant `response.errors`
-        print("Cause(s) de l'échec : " + response.errors)
+        print("Cause(s) de l'échec : " + str(response.errors))
 
 
 # Maintenant que nous avons une classe gestionnaire d'évènements à disposition,
