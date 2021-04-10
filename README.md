@@ -1,8 +1,6 @@
-[:fr: French Documentation](README-fr.md)
+[:fr: Traduction française disponible ici](README-fr.md)
 
-This package is ready for use but has not undergone extensive real-world testing.
-
-We appreciate bug reports.
+This package is used in real-world applications but is relatively new. As such, we appreciate bug reports from the community.
 
 # Requirements
 
