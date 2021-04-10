@@ -136,7 +136,7 @@ class MyHandler:
         print("ID of failed request: " + response.id)
         # We can also retrieve a list of error message(s) by
         # calling response.errors:
-        print("Reason(s) for failure: " + response.errors)
+        print("Reason(s) for failure: " + str(response.errors))
 
 
 # Now that we have a handler class to use, let's create an
