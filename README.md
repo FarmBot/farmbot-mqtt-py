@@ -1,6 +1,8 @@
 [:fr: Traduction française disponible ici](README-fr.md)
 
-This package is used in real-world applications but is relatively new. As such, we appreciate bug reports from the community.
+# Where Is the Latest Documentation?
+
+If you are reading this document anywhere other than [The official Github page](https://github.com/FarmBot/farmbot-py), you may be reading old documentation. Please visit Github for the latest documentation.
 
 # Requirements
 
@@ -186,6 +188,11 @@ Please create an issue if you would to request a new command.
  * Ability to execute an existing sequence.
  * REST resource management.
 
-# Building and Publishing the Package
+# Building and Publishing the Package (For FarmBot Employees)
 
 We follow a standard Pip / PyPI workflow. See [this excelent tutorial](https://www.youtube.com/watch?v=GIF3LaRqgXo&t=1527s) for details.
+
+```
+python3 setup.py bdist_wheel sdist
+twine upload dist/*
+```
