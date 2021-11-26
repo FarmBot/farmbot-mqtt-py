@@ -182,6 +182,7 @@ Please create an issue if you would to request a new command.
  * bot.toggle_pin(pin_number)
  * bot.update_farmbot_os()
  * bot.write_pin(pin_number, pin_value, pin_mode="digital" )
+ * bot.lua(lua_string)
 
 # Not Yet Supported
 

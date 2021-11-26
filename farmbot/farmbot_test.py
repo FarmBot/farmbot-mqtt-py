@@ -343,6 +343,10 @@ class TestFarmbotConnection():
         bot.go_to_home()
         self.expected_rpc(bot, "home", {"speed": 100, "axis": "all"})
 
+        lua_str = "print('Hello, world!')"
+        bot.lua(lua_str)
+        self.expected_rpc(bot, "lua", {"lua": lua_str})
+
         bot.move_absolute(x=1.2, y=3.4, z=5.6)
         self.expected_rpc(bot,
                           'move_absolute',

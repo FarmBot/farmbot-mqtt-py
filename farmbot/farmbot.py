@@ -397,3 +397,9 @@ class Farmbot():
         """
         return self._do_cs("set_servo_angle",
                            {"pin_number": pin_number, "pin_value": angle})
+
+    def lua(self, lua_string):
+        """
+        Evaluates a Lua expression on the remote device.
+        """
+        return self._do_cs("lua", {"lua": lua_string})
