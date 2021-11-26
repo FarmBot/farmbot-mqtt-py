@@ -150,6 +150,7 @@ handler = MyHandler()
 # status updates, etc..
 # If you need to run other code while `connect()` is running,
 # consider using tools like system threads or processes.
+# See: `example_threads.py` for inspiration.
 fb.connect(handler)
 print("This line will not execute. `connect()` is a blocking call.")
 ```
