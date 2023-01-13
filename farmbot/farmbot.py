@@ -48,6 +48,9 @@ class FarmbotConnection():
 
         self.mqtt.loop_forever()
 
+    def stop_connection(self):
+        self.mqtt.disconnect()
+
     def handle_connect(self, mqtt, userdata, flags, rc):
         for channel in self.channels:
             mqtt.subscribe(channel)
@@ -221,6 +224,9 @@ class Farmbot():
         """
         self._handler = handler
         self._connection.start_connection()
+
+    def disconnect(self):
+        self._connection.stop_connection()
 
     def position(self):
         """
@@ -403,3 +409,4 @@ class Farmbot():
         Evaluates a Lua expression on the remote device.
         """
         return self._do_cs("lua", {"lua": lua_string})
+
